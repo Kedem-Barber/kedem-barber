@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Kedem Barber - Agenda</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #aaa;
+            margin-bottom: 40px;
+        }
+
+        .section {
+            background: #1c1c1c;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .day {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .day:last-child {
+            border-bottom: none;
+        }
+
+        .closed {
+            color: #777;
+        }
+
+        .hours {
+            color: #ddd;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>KEDEM BARBER</h1>
+
+        <p class="subtitle">
+            Reserva tu hora
+        </p>
+
+        <div class="section">
+
+            <h2>Horario de atención</h2>
+
+            <div class="day">
+                <span>Lunes</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Martes</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Miércoles</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Jueves</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Viernes</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Sábado</span>
+                <span class="hours">10:00 - 20:00</span>
+            </div>
+
+            <div class="day">
+                <span>Domingo</span>
+                <span class="closed">Cerrado</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
