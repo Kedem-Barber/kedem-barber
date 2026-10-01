@@ -255,3 +255,210 @@
 
 </body>
 </html>
+<script type="module">
+
+  import { initializeApp } 
+    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+  import { 
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    where
+  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+
+  // Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyDbBz1Eoz1d5OkdKEShxGD1YU4ZSzZ6sLE",
+    authDomain: "kedem-barber.firebaseapp.com",
+    projectId: "kedem-barber",
+    storageBucket: "kedem-barber.firebasestorage.app",
+    messagingSenderId: "12637220504",
+    appId: "1:12637220504:web:b8002443bf95ff238eeaed"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+
+  let horaSeleccionada = null;
+
+
+  const horasDisponibles = [
+    "10:00",
+    "11:00",
+    "12:00",
+    "13:00",
+    "14:00",
+    "15:00",
+    "16:00",
+    "17:00",
+    "18:00",
+    "19:00"
+  ];
+
+
+  const fechaInput = document.getElementById("fecha");
+  const horasDiv = document.getElementById("horas");
+
+
+  fechaInput.addEventListener("change", mostrarHoras);
+
+
+  async function mostrarHoras() {
+
+    horaSeleccionada = null;
+    horasDiv.innerHTML = "";
+
+    const fecha = new Date(fechaInput.value + "T00:00:00");
+    const dia = fecha.getDay();
+
+    // Domingo
+    if (dia === 0) {
+      horasDiv.innerHTML =
+        "<p style='color:#aaa;'>Los domingos la barbería está cerrada.</p>";
+      return;
+    }
+
+
+    // Buscar reservas de ese día
+    const reservasRef = collection(db, "Reservas");
+
+    const q = query(
+      reservasRef,
+      where("fecha", "==", fechaInput.value)
+    );
+
+    const resultado = await getDocs(q);
+
+    const horasOcupadas = [];
+
+    resultado.forEach((doc) => {
+      horasOcupadas.push(doc.data().hora);
+    });
+
+
+    horasDisponibles.forEach(hora => {
+
+      const boton = document.createElement("button");
+
+      boton.type = "button";
+      boton.className = "hour";
+      boton.textContent = hora;
+
+
+      // Si está ocupada
+      if (horasOcupadas.includes(hora)) {
+
+        boton.classList.add("disabled");
+        boton.disabled = true;
+        boton.textContent = hora + " · Ocupada";
+
+      } else {
+
+        boton.onclick = function () {
+
+          document.querySelectorAll(".hour").forEach(b => {
+            b.classList.remove("selected");
+          });
+
+          boton.classList.add("selected");
+
+          horaSeleccionada = hora;
+        };
+
+      }
+
+      horasDiv.appendChild(boton);
+
+    });
+
+  }
+
+
+  async function reservar() {
+
+    const nombre =
+      document.getElementById("nombre").value.trim();
+
+    const telefono =
+      document.getElementById("telefono").value.trim();
+
+    const fecha =
+      fechaInput.value;
+
+
+    if (!fecha) {
+      alert("Selecciona un día.");
+      return;
+    }
+
+
+    if (!horaSeleccionada) {
+      alert("Selecciona una hora.");
+      return;
+    }
+
+
+    if (!nombre) {
+      alert("Ingresa tu nombre.");
+      return;
+    }
+
+
+    if (!telefono) {
+      alert("Ingresa tu WhatsApp.");
+      return;
+    }
+
+
+    try {
+
+      // Guardar reserva en Firebase
+
+      await addDoc(collection(db, "Reservas"), {
+
+        nombre: nombre,
+        telefono: telefono,
+        fecha: fecha,
+        hora: horaSeleccionada
+
+      });
+
+
+      document.getElementById("mensaje").innerHTML =
+
+        "✅ <strong>Reserva confirmada</strong><br><br>" +
+
+        nombre + "<br>" +
+
+        fecha + " · " +
+
+        horaSeleccionada;
+
+
+      // Limpiar formulario
+
+      document.getElementById("nombre").value = "";
+      document.getElementById("telefono").value = "";
+
+      horaSeleccionada = null;
+
+      mostrarHoras();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      document.getElementById("mensaje").innerHTML =
+        "❌ No se pudo realizar la reserva. Inténtalo nuevamente.";
+
+    }
+
+  }
+
+</script>
