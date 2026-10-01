@@ -1,130 +1,257 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kedem Barber</title>
 
-    <title>Kedem Barber - Agenda</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    body {
+      background: #111;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-        }
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 30px 20px;
+      text-align: center;
+    }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 40px 20px;
-            text-align: center;
-        }
+    h1 {
+      font-size: 32px;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
 
-        h1 {
-            font-size: 32px;
-            letter-spacing: 3px;
-            margin-bottom: 10px;
-        }
+    .subtitle {
+      color: #aaa;
+      margin-bottom: 35px;
+    }
 
-        .subtitle {
-            color: #aaa;
-            margin-bottom: 40px;
-        }
+    .section {
+      background: #1c1c1c;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
 
-        .section {
-            background: #1c1c1c;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
+    label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      color: #ccc;
+    }
 
-        .section h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
+    input {
+      width: 100%;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #111;
+      color: white;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
 
-        .day {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-        }
+    .hours {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
 
-        .day:last-child {
-            border-bottom: none;
-        }
+    .hour {
+      padding: 14px;
+      background: #292929;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
 
-        .closed {
-            color: #777;
-        }
+    .hour:hover {
+      background: #333;
+    }
 
-        .hours {
-            color: #ddd;
-        }
-    </style>
+    .hour.selected {
+      background: white;
+      color: black;
+    }
+
+    .hour.disabled {
+      background: #111;
+      color: #555;
+      border-color: #222;
+      cursor: not-allowed;
+    }
+
+    button.confirm {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: black;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button.confirm:hover {
+      background: #ddd;
+    }
+
+    #mensaje {
+      margin-top: 20px;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 
 <body>
 
-    <div class="container">
+  <div class="container">
 
-        <h1>KEDEM BARBER</h1>
+    <h1>KEDEM BARBER</h1>
+    <p class="subtitle">Reserva tu hora</p>
 
-        <p class="subtitle">
-            Reserva tu hora
-        </p>
+    <div class="section">
 
-        <div class="section">
+      <label for="fecha">Selecciona el día</label>
 
-            <h2>Horario de atención</h2>
+      <input type="date" id="fecha">
 
-            <div class="day">
-                <span>Lunes</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <label>Selecciona la hora</label>
 
-            <div class="day">
-                <span>Martes</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <div class="hours" id="horas"></div>
 
-            <div class="day">
-                <span>Miércoles</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <label for="nombre" style="margin-top:20px;">Tu nombre</label>
 
-            <div class="day">
-                <span>Jueves</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
 
-            <div class="day">
-                <span>Viernes</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <label for="telefono">WhatsApp</label>
 
-            <div class="day">
-                <span>Sábado</span>
-                <span class="hours">10:00 - 20:00</span>
-            </div>
+      <input type="tel" id="telefono" placeholder="Ej: 957166184">
 
-            <div class="day">
-                <span>Domingo</span>
-                <span class="closed">Cerrado</span>
-            </div>
+      <button class="confirm" onclick="reservar()">
+        Reservar hora
+      </button>
 
-        </div>
+      <div id="mensaje"></div>
 
     </div>
+
+    <p style="color:#777; font-size:14px;">
+      Lunes a sábado · 10:00 a 20:00
+    </p>
+
+  </div>
+
+  <script>
+    let horaSeleccionada = null;
+
+    const horasDisponibles = [
+      "10:00",
+      "11:00",
+      "12:00",
+      "13:00",
+      "14:00",
+      "15:00",
+      "16:00",
+      "17:00",
+      "18:00",
+      "19:00"
+    ];
+
+    const fechaInput = document.getElementById("fecha");
+    const horasDiv = document.getElementById("horas");
+
+    fechaInput.addEventListener("change", mostrarHoras);
+
+    function mostrarHoras() {
+
+      horaSeleccionada = null;
+      horasDiv.innerHTML = "";
+
+      const fecha = new Date(fechaInput.value + "T00:00:00");
+      const dia = fecha.getDay();
+
+      // Domingo
+      if (dia === 0) {
+        horasDiv.innerHTML =
+          "<p style='color:#aaa;'>Los domingos la barbería está cerrada.</p>";
+        return;
+      }
+
+      horasDisponibles.forEach(hora => {
+
+        const boton = document.createElement("button");
+
+        boton.className = "hour";
+        boton.textContent = hora;
+
+        boton.onclick = function () {
+
+          document.querySelectorAll(".hour").forEach(b => {
+            b.classList.remove("selected");
+          });
+
+          boton.classList.add("selected");
+
+          horaSeleccionada = hora;
+        };
+
+        horasDiv.appendChild(boton);
+
+      });
+    }
+
+    function reservar() {
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const telefono = document.getElementById("telefono").value.trim();
+      const fecha = fechaInput.value;
+
+      if (!fecha) {
+        alert("Selecciona un día.");
+        return;
+      }
+
+      if (!horaSeleccionada) {
+        alert("Selecciona una hora.");
+        return;
+      }
+
+      if (!nombre) {
+        alert("Ingresa tu nombre.");
+        return;
+      }
+
+      if (!telefono) {
+        alert("Ingresa tu WhatsApp.");
+        return;
+      }
+
+      document.getElementById("mensaje").innerHTML =
+        "✅ Reserva seleccionada:<br><br>" +
+        "<strong>" + fecha + "</strong><br>" +
+        "<strong>" + horaSeleccionada + "</strong><br>" +
+        nombre + "<br>" +
+        telefono;
+    }
+  </script>
 
 </body>
 </html>
