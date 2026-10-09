@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kedem Barber</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kedem Barber | Reserva tu hora</title>
 
   <style>
     * {
@@ -15,7 +16,7 @@
 
     body {
       background: #111;
-      color: white;
+      color: #fff;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -24,7 +25,7 @@
     .container {
       width: 100%;
       max-width: 500px;
-      padding: 30px 20px;
+      padding: 35px 20px;
       text-align: center;
     }
 
@@ -36,32 +37,32 @@
 
     .subtitle {
       color: #aaa;
-      margin-bottom: 35px;
+      margin-bottom: 30px;
     }
 
     .section {
       background: #1c1c1c;
       border-radius: 15px;
-      padding: 20px;
+      padding: 22px;
       margin-bottom: 20px;
+      text-align: left;
     }
 
     label {
       display: block;
-      text-align: left;
-      margin-bottom: 8px;
       color: #ccc;
+      margin-bottom: 8px;
     }
 
     input {
       width: 100%;
       padding: 14px;
-      border-radius: 8px;
+      margin-bottom: 22px;
       border: 1px solid #444;
+      border-radius: 8px;
       background: #111;
-      color: white;
+      color: #fff;
       font-size: 16px;
-      margin-bottom: 20px;
     }
 
     .hours {
@@ -71,17 +72,13 @@
     }
 
     .hour {
-      padding: 14px;
-      background: #292929;
-      border: 1px solid #444;
+      padding: 14px 5px;
+      border: 1px solid #555;
       border-radius: 8px;
+      background: #292929;
       color: white;
       cursor: pointer;
       font-size: 16px;
-    }
-
-    .hour:hover {
-      background: #333;
     }
 
     .hour.selected {
@@ -89,15 +86,16 @@
       color: black;
     }
 
-    .hour.disabled {
-      background: #111;
-      color: #555;
-      border-color: #222;
+    .hour:disabled {
+      color: #888;
+      background: #151515;
       cursor: not-allowed;
+      border-color: #333;
     }
 
-    button.confirm {
+    .confirm {
       width: 100%;
+      margin-top: 8px;
       padding: 15px;
       border: none;
       border-radius: 8px;
@@ -106,359 +104,256 @@
       font-size: 17px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 20px;
     }
 
-    button.confirm:hover {
-      background: #ddd;
+    .confirm:disabled {
+      opacity: .5;
+      cursor: wait;
     }
 
     #mensaje {
-      margin-top: 20px;
+      margin-top: 18px;
       line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    .footer {
+      color: #888;
+      font-size: 14px;
+      line-height: 1.8;
     }
   </style>
 </head>
 
 <body>
-
-  <div class="container">
-
+  <main class="container">
     <h1>KEDEM BARBER</h1>
     <p class="subtitle">Reserva tu hora</p>
 
-    <div class="section">
-
+    <section class="section">
       <label for="fecha">Selecciona el día</label>
-
-      <input type="date" id="fecha">
+      <input type="date" id="fecha" required>
 
       <label>Selecciona la hora</label>
+      <div class="hours" id="horas">
+        <p style="color:#aaa">Selecciona una fecha para ver los horarios.</p>
+      </div>
 
-      <div class="hours" id="horas"></div>
+      <div style="margin-top:22px">
+        <label for="nombre">Tu nombre</label>
+        <input id="nombre" type="text" maxlength="80"
+               placeholder="Ej: Juan Pérez" autocomplete="name">
 
-      <label for="nombre" style="margin-top:20px;">Tu nombre</label>
+        <label for="telefono">WhatsApp</label>
+        <input id="telefono" type="tel" maxlength="20"
+               placeholder="Ej: 957166184" autocomplete="tel">
 
-      <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
+        <button class="confirm" id="confirmar" type="button">
+          Reservar hora
+        </button>
 
-      <label for="telefono">WhatsApp</label>
+        <div id="mensaje" role="status" aria-live="polite"></div>
+      </div>
+    </section>
 
-      <input type="tel" id="telefono" placeholder="Ej: 957166184">
-
-      <button class="confirm" onclick="reservar()">
-        Reservar hora
-      </button>
-
-      <div id="mensaje"></div>
-
-    </div>
-
-    <p style="color:#777; font-size:14px;">
-      Lunes a sábado · 10:00 a 20:00
+    <p class="footer">
+      Lunes a sábado · 10:00 a 20:00<br>
+      Domingos cerrado
     </p>
+  </main>
 
-  </div>
+  <script type="module">
+    import { initializeApp }
+      from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
-  <script>
-    let horaSeleccionada = null;
+    import {
+      getFirestore, collection, doc, getDocs,
+      query, where, writeBatch
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-    const horasDisponibles = [
-      "10:00",
-      "11:00",
-      "12:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00",
-      "18:00",
-      "19:00"
-    ];
+    const firebaseConfig = {
+      apiKey: "AIzaSyDbBz1Eoz1d5OkdKEShxGD1YU4ZSzZ6sLE",
+      authDomain: "kedem-barber.firebaseapp.com",
+      projectId: "kedem-barber",
+      storageBucket: "kedem-barber.firebasestorage.app",
+      messagingSenderId: "12637220504",
+      appId: "1:12637220504:web:b8002443bf95ff238eeaed"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const fechaInput = document.getElementById("fecha");
     const horasDiv = document.getElementById("horas");
+    const mensaje = document.getElementById("mensaje");
+    const confirmar = document.getElementById("confirmar");
 
-    fechaInput.addEventListener("change", mostrarHoras);
+    const horasDisponibles = [
+      "10:00", "11:00", "12:00", "13:00", "14:00",
+      "15:00", "16:00", "17:00", "18:00", "19:00"
+    ];
 
-    function mostrarHoras() {
+    let horaSeleccionada = null;
+    let cargando = false;
 
+    function fechaLocalActual() {
+      const ahora = new Date();
+      const anio = ahora.getFullYear();
+      const mes = String(ahora.getMonth() + 1).padStart(2, "0");
+      const dia = String(ahora.getDate()).padStart(2, "0");
+      return `${anio}-${mes}-${dia}`;
+    }
+
+    fechaInput.min = fechaLocalActual();
+
+    function idBloque(fecha, hora) {
+      return fecha.replaceAll("-", "") + "_" + hora.replace(":", "");
+    }
+
+    function mostrarMensaje(texto) {
+      mensaje.textContent = texto;
+    }
+
+    async function mostrarHoras() {
       horaSeleccionada = null;
-      horasDiv.innerHTML = "";
+      horasDiv.replaceChildren();
+      mostrarMensaje("");
 
-      const fecha = new Date(fechaInput.value + "T00:00:00");
-      const dia = fecha.getDay();
-
-      // Domingo
-      if (dia === 0) {
-        horasDiv.innerHTML =
-          "<p style='color:#aaa;'>Los domingos la barbería está cerrada.</p>";
+      const fecha = fechaInput.value;
+      if (!fecha) {
+        horasDiv.textContent = "Selecciona una fecha.";
         return;
       }
 
-      horasDisponibles.forEach(hora => {
+      if (fecha < fechaLocalActual()) {
+        horasDiv.textContent = "Elige hoy o una fecha futura.";
+        return;
+      }
 
-        const boton = document.createElement("button");
+      // Interpretar la fecha seleccionada sin cambiar de zona horaria.
+      const [anio, mes, dia] = fecha.split("-").map(Number);
+      const diaSemana = new Date(anio, mes - 1, dia).getDay();
 
-        boton.className = "hour";
-        boton.textContent = hora;
+      if (diaSemana === 0) {
+        horasDiv.textContent = "Los domingos la barbería está cerrada.";
+        return;
+      }
 
-        boton.onclick = function () {
+      horasDiv.textContent = "Consultando horarios...";
 
-          document.querySelectorAll(".hour").forEach(b => {
-            b.classList.remove("selected");
+      try {
+        const q = query(
+          collection(db, "Ocupadas"),
+          where("fecha", "==", fecha)
+        );
+        const resultado = await getDocs(q);
+        const ocupadas = new Set(
+          resultado.docs.map(documento => documento.data().hora)
+        );
+
+        // Evitar mostrar resultados de una fecha anterior si el usuario
+        // cambia de fecha mientras se está consultando Firebase.
+        if (fechaInput.value !== fecha) return;
+
+        horasDiv.replaceChildren();
+
+        for (const hora of horasDisponibles) {
+          const boton = document.createElement("button");
+          boton.type = "button";
+          boton.className = "hour";
+          boton.textContent = ocupadas.has(hora)
+            ? `${hora} · Ocupada`
+            : hora;
+
+          boton.disabled = ocupadas.has(hora);
+
+          boton.addEventListener("click", () => {
+            horaSeleccionada = hora;
+
+            horasDiv.querySelectorAll(".hour").forEach(b => {
+              b.classList.remove("selected");
+            });
+
+            boton.classList.add("selected");
+            mostrarMensaje(`Horario seleccionado: ${hora}`);
           });
 
-          boton.classList.add("selected");
-
-          horaSeleccionada = hora;
-        };
-
-        horasDiv.appendChild(boton);
-
-      });
+          horasDiv.appendChild(boton);
+        }
+      } catch (error) {
+        console.error(error);
+        horasDiv.textContent = "No se pudieron consultar los horarios.";
+      }
     }
 
-    function reservar() {
+    fechaInput.addEventListener("change", mostrarHoras);
+
+    confirmar.addEventListener("click", async () => {
+      if (cargando) return;
 
       const nombre = document.getElementById("nombre").value.trim();
       const telefono = document.getElementById("telefono").value.trim();
       const fecha = fechaInput.value;
+      const hora = horaSeleccionada;
 
-      if (!fecha) {
-        alert("Selecciona un día.");
-        return;
+      if (!fecha) return mostrarMensaje("Selecciona un día.");
+      if (!hora) return mostrarMensaje("Selecciona una hora.");
+      if (!nombre) return mostrarMensaje("Escribe tu nombre.");
+      if (!telefono) return mostrarMensaje("Escribe tu WhatsApp.");
+
+      if (fecha < fechaLocalActual()) {
+        return mostrarMensaje("Elige hoy o una fecha futura.");
       }
 
-      if (!horaSeleccionada) {
-        alert("Selecciona una hora.");
-        return;
-      }
+      cargando = true;
+      confirmar.disabled = true;
+      mostrarMensaje("Procesando la reserva...");
 
-      if (!nombre) {
-        alert("Ingresa tu nombre.");
-        return;
-      }
+      try {
+        const reservaRef = doc(collection(db, "Reservas"));
+        const bloqueId = idBloque(fecha, hora);
+        const ocupadaRef = doc(db, "Ocupadas", bloqueId);
 
-      if (!telefono) {
-        alert("Ingresa tu WhatsApp.");
-        return;
-      }
+        // Las reglas de Firestore deben validar ambos documentos
+        // dentro de esta operación atómica.
+        const batch = writeBatch(db);
 
-      document.getElementById("mensaje").innerHTML =
-        "✅ Reserva seleccionada:<br><br>" +
-        "<strong>" + fecha + "</strong><br>" +
-        "<strong>" + horaSeleccionada + "</strong><br>" +
-        nombre + "<br>" +
-        telefono;
-    }
+        batch.set(ocupadaRef, {
+          fecha,
+          hora,
+          reservaId: reservaRef.id
+        });
+
+        batch.set(reservaRef, {
+          nombre,
+          telefono,
+          fecha,
+          hora,
+          slotId: bloqueId
+        });
+
+        await batch.commit();
+
+        mostrarMensaje(
+          `¡Reserva confirmada, ${nombre}! ${fecha} a las ${hora}.`
+        );
+
+        document.getElementById("nombre").value = "";
+        document.getElementById("telefono").value = "";
+        horaSeleccionada = null;
+
+        await mostrarHoras();
+      } catch (error) {
+        console.error(error);
+        mostrarMensaje(
+          "No se pudo confirmar la reserva. Puede que el horario ya esté ocupado o que falte configurar los permisos."
+        );
+        await mostrarHoras();
+      } finally {
+        cargando = false;
+        confirmar.disabled = false;
+      }
+    });
   </script>
-
 </body>
 </html>
-<script type="module">
-
-  import { initializeApp } 
-    from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
-  import { 
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    where
-  } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-
-
-  // Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyDbBz1Eoz1d5OkdKEShxGD1YU4ZSzZ6sLE",
-    authDomain: "kedem-barber.firebaseapp.com",
-    projectId: "kedem-barber",
-    storageBucket: "kedem-barber.firebasestorage.app",
-    messagingSenderId: "12637220504",
-    appId: "1:12637220504:web:b8002443bf95ff238eeaed"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-
-  let horaSeleccionada = null;
-
-
-  const horasDisponibles = [
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-    "18:00",
-    "19:00"
-  ];
-
-
-  const fechaInput = document.getElementById("fecha");
-  const horasDiv = document.getElementById("horas");
-
-
-  fechaInput.addEventListener("change", mostrarHoras);
-
-
-  async function mostrarHoras() {
-
-    horaSeleccionada = null;
-    horasDiv.innerHTML = "";
-
-    const fecha = new Date(fechaInput.value + "T00:00:00");
-    const dia = fecha.getDay();
-
-    // Domingo
-    if (dia === 0) {
-      horasDiv.innerHTML =
-        "<p style='color:#aaa;'>Los domingos la barbería está cerrada.</p>";
-      return;
-    }
-
-
-    // Buscar reservas de ese día
-    const reservasRef = collection(db, "Reservas");
-
-    const q = query(
-      reservasRef,
-      where("fecha", "==", fechaInput.value)
-    );
-
-    const resultado = await getDocs(q);
-
-    const horasOcupadas = [];
-
-    resultado.forEach((doc) => {
-      horasOcupadas.push(doc.data().hora);
-    });
-
-
-    horasDisponibles.forEach(hora => {
-
-      const boton = document.createElement("button");
-
-      boton.type = "button";
-      boton.className = "hour";
-      boton.textContent = hora;
-
-
-      // Si está ocupada
-      if (horasOcupadas.includes(hora)) {
-
-        boton.classList.add("disabled");
-        boton.disabled = true;
-        boton.textContent = hora + " · Ocupada";
-
-      } else {
-
-        boton.onclick = function () {
-
-          document.querySelectorAll(".hour").forEach(b => {
-            b.classList.remove("selected");
-          });
-
-          boton.classList.add("selected");
-
-          horaSeleccionada = hora;
-        };
-
-      }
-
-      horasDiv.appendChild(boton);
-
-    });
-
-  }
-
-
-  async function reservar() {
-
-    const nombre =
-      document.getElementById("nombre").value.trim();
-
-    const telefono =
-      document.getElementById("telefono").value.trim();
-
-    const fecha =
-      fechaInput.value;
-
-
-    if (!fecha) {
-      alert("Selecciona un día.");
-      return;
-    }
-
-
-    if (!horaSeleccionada) {
-      alert("Selecciona una hora.");
-      return;
-    }
-
-
-    if (!nombre) {
-      alert("Ingresa tu nombre.");
-      return;
-    }
-
-
-    if (!telefono) {
-      alert("Ingresa tu WhatsApp.");
-      return;
-    }
-
-
-    try {
-
-      // Guardar reserva en Firebase
-
-      await addDoc(collection(db, "Reservas"), {
-
-        nombre: nombre,
-        telefono: telefono,
-        fecha: fecha,
-        hora: horaSeleccionada
-
-      });
-
-
-      document.getElementById("mensaje").innerHTML =
-
-        "✅ <strong>Reserva confirmada</strong><br><br>" +
-
-        nombre + "<br>" +
-
-        fecha + " · " +
-
-        horaSeleccionada;
-
-
-      // Limpiar formulario
-
-      document.getElementById("nombre").value = "";
-      document.getElementById("telefono").value = "";
-
-      horaSeleccionada = null;
-
-      mostrarHoras();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      document.getElementById("mensaje").innerHTML =
-        "❌ No se pudo realizar la reserva. Inténtalo nuevamente.";
-
-    }
-
-  }
-
-</script>
